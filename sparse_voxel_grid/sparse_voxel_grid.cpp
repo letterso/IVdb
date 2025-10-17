@@ -42,8 +42,8 @@ SparseVoxelGrid::SparseVoxelGrid(const double voxel_size,
     : voxel_size_(voxel_size),
       max_points_per_voxel_(max_points_per_voxel),
       capacity_(capacity),
-      map_(voxel_size, inner_grid_log2_dim, leaf_grid_log2_dim),
-      accessor_(map_.createAccessor()) {}
+      update_count(0),
+      map_(voxel_size, inner_grid_log2_dim, leaf_grid_log2_dim) {}
 
 bool SparseVoxelGrid::GetClosestPoint(const PointType& point,
                                       PointVector& closest_point, int max_num,
@@ -92,12 +92,35 @@ bool SparseVoxelGrid::GetClosestPoint(const PointType& point,
 }
 
 void SparseVoxelGrid::AddPoints(const PointVector& points) {
+  if (future_.valid())
+    future_.get();
   const double map_resolution = std::sqrt(voxel_size_ * voxel_size_ / max_points_per_voxel_);
+  auto accessor = map_.createAccessor();
   std::for_each(points.cbegin(), points.cend(), [&](const PointType& point) {
     Eigen::Vector3d p(point.x, point.y, point.z);
     const auto voxel_coordinates = map_.posToCoord(p);
 
-    VoxelBlock* voxel_points = accessor_.value(voxel_coordinates, /*create_if_missing=*/true);
+    auto it = lru_map_.find(voxel_coordinates);
+    if (it != lru_map_.end()) {
+      // Move to front
+      lru_cache_.splice(lru_cache_.begin(), lru_cache_, it->second);
+    } else {
+      // Add to front
+      lru_cache_.push_front(voxel_coordinates);
+      lru_map_[voxel_coordinates] = lru_cache_.begin();
+
+      // Check for eviction
+      if (lru_map_.size() > capacity_) {
+        // Get key to evict
+        const Bonxai::CoordT key_to_evict = lru_cache_.back();
+        lru_cache_.pop_back();
+        lru_map_.erase(key_to_evict);
+        accessor.setCellOff(key_to_evict);
+        update_count++;
+      }
+    }
+
+    VoxelBlock* voxel_points = accessor.value(voxel_coordinates, /*create_if_missing=*/true);
     if (voxel_points->size() == max_points_per_voxel_ ||
         std::any_of(voxel_points->cbegin(), voxel_points->cend(),
                     [&](const auto& voxel_point) { return (voxel_point - p).norm() < map_resolution; })) {
@@ -106,6 +129,11 @@ void SparseVoxelGrid::AddPoints(const PointVector& points) {
     voxel_points->reserve(max_points_per_voxel_);
     voxel_points->emplace_back(p);
   });
+  if (update_count > 1000)
+  {
+    future_ = std::async([&]()
+                         { map_.releaseUnusedMemory(); });
+  }
 }
 
 std::vector<Eigen::Vector3d> SparseVoxelGrid::Pointcloud() const {
@@ -114,6 +142,7 @@ std::vector<Eigen::Vector3d> SparseVoxelGrid::Pointcloud() const {
   map_.forEachCell([&point_cloud, this](const VoxelBlock& block, const auto&) {
     point_cloud.insert(point_cloud.end(), block.cbegin(), block.cend());
   });
+  std::cout<<map_.memUsage()<<std::endl;
   return point_cloud;
 }
 

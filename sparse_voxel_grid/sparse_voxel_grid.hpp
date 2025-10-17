@@ -26,6 +26,8 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <memory>
+#include <future>
 #include <pcl/common/centroid.h>
 
 #include "bonxai/bonxai.hpp"
@@ -50,20 +52,24 @@ class SparseVoxelGrid {
     
     void Clear() { 
       map_.clear(Bonxai::ClearOption::CLEAR_MEMORY); 
+      lru_cache_.clear();
+      lru_map_.clear();
     }
     bool Empty() const { return map_.activeCellsCount() == 0; }
     void AddPoints(const PointVector& points);
     std::vector<Eigen::Vector3d> Pointcloud() const;
     bool GetClosestPoint(const PointType& pt, PointVector& closest_pt, int max_num = 5, double max_range = 5.0);
 
+   private:
     double voxel_size_;
     unsigned int max_points_per_voxel_;
     size_t capacity_;
+    size_t update_count;
     Bonxai::VoxelGrid<VoxelBlock> map_;
-
-   private:
-    using AccessorType = typename Bonxai::VoxelGrid<VoxelBlock>::Accessor;
-    AccessorType accessor_;
+    
+    std::list<Bonxai::CoordT> lru_cache_;
+    std::unordered_map<Bonxai::CoordT, std::list<Bonxai::CoordT>::iterator> lru_map_;
+    std::future<void> future_;
 };
 
 } // namespace rko_lio::core
