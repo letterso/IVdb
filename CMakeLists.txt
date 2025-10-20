@@ -3,6 +3,8 @@ project(vox_comparison)
 
 set(CMAKE_CXX_STANDARD 17)
 
+include(cmake/static_check.cmake)
+
 # Find required packages
 find_package(PCL REQUIRED)
 find_package(Eigen3 REQUIRED)
