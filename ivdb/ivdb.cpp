@@ -165,7 +165,7 @@ bool IVdb<PointType>::GetClosestPoint(const PointType &point,
         return false;
     }
 
-    if (candidates.size() > static_cast<size_t>(max_num))
+    if (candidates.size() > max_num)
     {
         std::nth_element(candidates.begin(), candidates.begin() + max_num - 1, candidates.end());
         candidates.resize(max_num);
@@ -335,7 +335,6 @@ void IVdb<PointType>::UpdateLRU(const std::unordered_set<Bonxai::CoordT> &voxel_
 
     if (!delete_voxel_coords.empty())
     {
-        auto start_time = std::chrono::high_resolution_clock::now();
         std::for_each(delete_voxel_coords.cbegin(), delete_voxel_coords.cend(), [&](const Bonxai::CoordT &voxel_coord)
                       {
             auto root_it = map_.rootMap().find(voxel_coord);
@@ -351,9 +350,6 @@ void IVdb<PointType>::UpdateLRU(const std::unordered_set<Bonxai::CoordT> &voxel_
                 }
                 map_.rootMap().erase(voxel_coord);
             } });
-        auto end_time = std::chrono::high_resolution_clock::now();
-        auto insertion_time_ivox2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        std::cout << "  UpdateLRU " << delete_voxel_coords.size() << " : " << insertion_time_ivox2.count() << " ms" << std::endl;
     }
 }
 
@@ -364,6 +360,5 @@ std::vector<Eigen::Vector3d> IVdb<PointType>::Pointcloud() const
     point_cloud.reserve(map_.activeCellsCount() * options_.max_points_per_voxel_);
     map_.forEachCell([&point_cloud, this](const VoxelBlock &block, const auto &)
                      { point_cloud.insert(point_cloud.end(), block.cbegin(), block.cend()); });
-    std::cout << map_.memUsage() << std::endl;
     return point_cloud;
 }
