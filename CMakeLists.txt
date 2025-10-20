@@ -9,7 +9,7 @@ find_package(Eigen3 REQUIRED)
 
 # Define source files
 set(SOURCES
-    sparse_voxel_grid/sparse_voxel_grid.cpp
+    ivdb/ivdb.cpp
     main.cpp
 )
 

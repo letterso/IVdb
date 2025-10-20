@@ -1,4 +1,4 @@
-#include "sparse_voxel_grid.hpp"
+#include "ivdb.hpp"
 
 #include <Eigen/Core>
 #include <queue>
