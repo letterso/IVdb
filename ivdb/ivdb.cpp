@@ -170,7 +170,7 @@ bool IVdb<PointType>::GetClosestPoint(const PointType &point,
         std::nth_element(candidates.begin(), candidates.begin() + max_num - 1, candidates.end());
         candidates.resize(max_num);
     }
-    std::sort(candidates.begin(), candidates.begin());
+    std::sort(candidates.begin(), candidates.end());
 
     closest_points.clear();
     closest_points.reserve(candidates.size());
@@ -190,6 +190,7 @@ template <typename PointType>
 void IVdb<PointType>::AddPoints(const PointVector &points)
 {
     const double map_resolution = std::sqrt(options_.voxel_size_ * options_.voxel_size_ / options_.max_points_per_voxel_);
+    const double map_resolution_sq = map_resolution * map_resolution;
     std::unordered_set<Bonxai::CoordT> voxel_coords;
     auto accessor = map_.createAccessor();
     std::for_each(points.cbegin(), points.cend(), [&](const PointType &point)
@@ -199,7 +200,7 @@ void IVdb<PointType>::AddPoints(const PointVector &points)
     VoxelBlock* voxel_points = accessor.value(voxel_coordinate, /*create_if_missing=*/true);
     if (voxel_points->size() == options_.max_points_per_voxel_ ||
         std::any_of(voxel_points->cbegin(), voxel_points->cend(),
-                    [&](const auto& voxel_point) { return (voxel_point - p).norm() < map_resolution; })) {
+                    [&](const auto& voxel_point) { return (voxel_point - p).squaredNorm() < map_resolution_sq; })) {
       return;
     }
     voxel_points->reserve(options_.max_points_per_voxel_);
