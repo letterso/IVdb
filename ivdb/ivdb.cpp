@@ -158,8 +158,7 @@ bool IVdb<PointType>::GetClosestPoint(const PointType &point,
 template <typename PointType>
 void IVdb<PointType>::AddPoints(const PointVector &points)
 {
-    const double map_resolution = std::sqrt(options_.voxel_size_ * options_.voxel_size_ / options_.max_points_per_voxel_);
-    const double map_resolution_sq = map_resolution * map_resolution;
+    const double map_resolution_sq = options_.voxel_size_ * options_.voxel_size_ / options_.max_points_per_voxel_;
     std::unordered_set<Bonxai::CoordT> voxel_coords;
     auto accessor = map_.createAccessor();
     std::for_each(points.cbegin(), points.cend(), [&](const PointType &point)
