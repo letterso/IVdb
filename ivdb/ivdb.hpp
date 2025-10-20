@@ -54,7 +54,7 @@ public:
   bool Empty() const { return map_.activeCellsCount() == 0; }
   void AddPoints(const PointVector &points);
   std::vector<Eigen::Vector3d> Pointcloud() const;
-  bool GetClosestPoint(const PointType &pt, PointVector &closest_pt, size_t max_num = 5);
+  bool GetClosestPoint(const PointType &point, PointVector &closest_points, size_t max_num = 5);
 
 private:
   Options options_;

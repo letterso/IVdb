@@ -127,7 +127,7 @@ void IVdb<PointType>::GenerateNearbyGrids()
 
 template <typename PointType>
 bool IVdb<PointType>::GetClosestPoint(const PointType &point,
-                                      PointVector &closest_point, size_t max_num)
+                                      PointVector &closest_points, size_t max_num)
 {
     std::vector<DistPoint> candidates;
 
@@ -172,15 +172,15 @@ bool IVdb<PointType>::GetClosestPoint(const PointType &point,
     }
     std::sort(candidates.begin(), candidates.begin());
 
-    closest_point.clear();
-    closest_point.reserve(candidates.size());
+    closest_points.clear();
+    closest_points.reserve(candidates.size());
     for (const auto &candidate : candidates)
     {
-        PointType point;
-        point.x = candidate.point->x();
-        point.y = candidate.point->y();
-        point.z = candidate.point->z();
-        closest_point.push_back(point);
+        PointType closest_point;
+        closest_point.x = candidate.point->x();
+        closest_point.y = candidate.point->y();
+        closest_point.z = candidate.point->z();
+        closest_points.push_back(closest_point);
     }
 
     return true;
