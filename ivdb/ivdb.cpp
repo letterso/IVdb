@@ -104,9 +104,10 @@ IVdb::IVdb(const double voxel_size,
       capacity_(capacity),
       map_(voxel_size, inner_grid_log2_dim, leaf_grid_log2_dim) {}
 
-bool IVdb::GetClosestPoint(const PointType& point,
-                                      PointVector& closest_point, int max_num,
-                                      double max_range){
+bool IVdb::GetClosestPoint(const PointType &point,
+                           PointVector &closest_point, int max_num,
+                           double max_range)
+{
     std::vector<DistPoint> candidates;
 
     const auto const_accessor = map_.createConstAccessor();
@@ -114,7 +115,8 @@ bool IVdb::GetClosestPoint(const PointType& point,
     const Bonxai::CoordT voxel = map_.posToCoord(pt);
     const double max_range_sq = max_range * max_range;
 
-    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT& voxel_shift) {
+    std::for_each(shifts.cbegin(), shifts.cend(), [&](const Bonxai::CoordT &voxel_shift)
+                  {
         const Bonxai::CoordT query_voxel = voxel + voxel_shift;
         const VoxelBlock* voxel_points = const_accessor.value(query_voxel);
         if (voxel_points != nullptr) {
@@ -124,14 +126,15 @@ bool IVdb::GetClosestPoint(const PointType& point,
                     candidates.push_back({dist_sq, &point_in_voxel});
                 }
             }
-        }
-    });
+        } });
 
-    if (candidates.empty()) {
+    if (candidates.empty())
+    {
         return false;
     }
 
-    if (candidates.size() > static_cast<size_t>(max_num)) {
+    if (candidates.size() > static_cast<size_t>(max_num))
+    {
         std::nth_element(candidates.begin(), candidates.begin() + max_num - 1, candidates.end());
         candidates.resize(max_num);
     }
@@ -139,7 +142,8 @@ bool IVdb::GetClosestPoint(const PointType& point,
 
     closest_point.clear();
     closest_point.reserve(candidates.size());
-    for (const auto& candidate : candidates) {
+    for (const auto &candidate : candidates)
+    {
         PointType point;
         point.x = candidate.point->x();
         point.y = candidate.point->y();
@@ -152,11 +156,11 @@ bool IVdb::GetClosestPoint(const PointType& point,
 
 void IVdb::AddPoints(const PointVector &points)
 {
-  const double map_resolution = std::sqrt(voxel_size_ * voxel_size_ / max_points_per_voxel_);
-  std::unordered_set<Bonxai::CoordT> voxel_coords;
-  auto accessor = map_.createAccessor();
-  std::for_each(points.cbegin(), points.cend(), [&](const PointType &point)
-                {
+    const double map_resolution = std::sqrt(voxel_size_ * voxel_size_ / max_points_per_voxel_);
+    std::unordered_set<Bonxai::CoordT> voxel_coords;
+    auto accessor = map_.createAccessor();
+    std::for_each(points.cbegin(), points.cend(), [&](const PointType &point)
+                  {
     Eigen::Vector3d p(point.x, point.y, point.z);
     const auto voxel_coordinate = map_.posToCoord(p);
     VoxelBlock* voxel_points = accessor.value(voxel_coordinate, /*create_if_missing=*/true);
@@ -169,7 +173,7 @@ void IVdb::AddPoints(const PointVector &points)
     voxel_points->emplace_back(p);
     voxel_coords.insert(map_.getRootKey(voxel_coordinate)); });
 
-  UpdateLRU(voxel_coords);
+    UpdateLRU(voxel_coords);
 }
 
 // bool IVdb::GetClosestPoint(const PointType &point,
@@ -269,10 +273,12 @@ void IVdb::AddPoints(const PointVector &points)
 //   // UpdateLRU(voxel_coords);
 // }
 
-void IVdb::UpdateLRU(const std::unordered_set<Bonxai::CoordT>& voxel_coords) {
+void IVdb::UpdateLRU(const std::unordered_set<Bonxai::CoordT> &voxel_coords)
+{
     std::vector<Bonxai::CoordT> delete_voxel_coords;
     delete_voxel_coords.reserve(voxel_coords.size());
-    std::for_each(voxel_coords.cbegin(), voxel_coords.cend(), [&](const Bonxai::CoordT& voxel_coord) {
+    std::for_each(voxel_coords.cbegin(), voxel_coords.cend(), [&](const Bonxai::CoordT &voxel_coord)
+                  {
         auto it = lru_map_.find(voxel_coord);
         if (it != lru_map_.end()) {
             // Move to front
@@ -290,12 +296,13 @@ void IVdb::UpdateLRU(const std::unordered_set<Bonxai::CoordT>& voxel_coords) {
                 lru_map_.erase(key_to_evict);
                 delete_voxel_coords.push_back(key_to_evict);
             }
-        }
-    });
+        } });
 
-    if (!delete_voxel_coords.empty()) {
+    if (!delete_voxel_coords.empty())
+    {
         auto start_time = std::chrono::high_resolution_clock::now();
-        std::for_each(delete_voxel_coords.cbegin(), delete_voxel_coords.cend(), [&](const Bonxai::CoordT& voxel_coord) {
+        std::for_each(delete_voxel_coords.cbegin(), delete_voxel_coords.cend(), [&](const Bonxai::CoordT &voxel_coord)
+                      {
             auto root_it = map_.rootMap().find(voxel_coord);
             if (root_it != map_.rootMap().end()) {
                 auto& inner_grid = root_it->second;
@@ -308,20 +315,19 @@ void IVdb::UpdateLRU(const std::unordered_set<Bonxai::CoordT>& voxel_coords) {
                     }
                 }
                 map_.rootMap().erase(voxel_coord);
-            }
-        });
+            } });
         auto end_time = std::chrono::high_resolution_clock::now();
         auto insertion_time_ivox2 = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-        std::cout << "  UpdateLRU " << delete_voxel_coords.size() << " : "<< insertion_time_ivox2.count() << " ms" << std::endl;
+        std::cout << "  UpdateLRU " << delete_voxel_coords.size() << " : " << insertion_time_ivox2.count() << " ms" << std::endl;
     }
 }
 
 std::vector<Eigen::Vector3d> IVdb::Pointcloud() const
 {
-  std::vector<Eigen::Vector3d> point_cloud;
-  point_cloud.reserve(map_.activeCellsCount() * max_points_per_voxel_);
-  map_.forEachCell([&point_cloud, this](const VoxelBlock &block, const auto &)
-                   { point_cloud.insert(point_cloud.end(), block.cbegin(), block.cend()); });
-  std::cout << map_.memUsage() << std::endl;
-  return point_cloud;
+    std::vector<Eigen::Vector3d> point_cloud;
+    point_cloud.reserve(map_.activeCellsCount() * max_points_per_voxel_);
+    map_.forEachCell([&point_cloud, this](const VoxelBlock &block, const auto &)
+                     { point_cloud.insert(point_cloud.end(), block.cbegin(), block.cend()); });
+    std::cout << map_.memUsage() << std::endl;
+    return point_cloud;
 }
