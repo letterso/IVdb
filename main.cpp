@@ -82,9 +82,9 @@ int main() {
     
     // Define common parameters for both structures
     const double ivox_resolution = 0.5;
-    const size_t ivox_capacity = 50000;
+    const size_t ivox_capacity = 1000000;
     const double ivdb_resolution = 0.5; // root 大小为2^(2+3)*ivdb_resolution, 2,3为默认层级大小
-    const size_t ivdb_capacity = 50;
+    const size_t ivdb_capacity = 100;
 
     // Define mapping parameters
     const float space_size_x = 50.0f;  // 20m x 20m x 10m space
@@ -138,7 +138,7 @@ int main() {
     // Test Sparse Voxel Grid
     std::cout << "\n--- Testing Sparse Voxel Grid ---" << std::endl;
 
-    IVdb ivdb({ivdb_resolution, 10, ivdb_capacity, IVdb<>::NearbyType::NEARBY124});
+    IVdb ivdb({ivdb_resolution, 10, ivdb_capacity, IVdb<>::NearbyType::NEARBY26});
 
     // Measure insertion time for Sparse Voxel Grid
     start_time = std::chrono::high_resolution_clock::now();
