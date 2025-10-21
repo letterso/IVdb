@@ -28,10 +28,10 @@ public:
   {
     double voxel_size_ = 0.5;                       // vdb_leaf_grid分辨率
     unsigned int max_points_per_voxel_ = 10;        // vdb_leaf_grid内最大点数
-    std::size_t capacity_ = 1000;                   // vdb_root_grid最大容量    
+    std::size_t capacity_ = 1000;                   // vdb_root_grid最大容量
     NearbyType nearby_type_ = NearbyType::NEARBY26; // nearby range
     uint8_t inner_grid_log2_dim_ = 2;               // vdb_inner_grid数量
-    uint8_t leaf_grid_log2_dim_ = 3;                 // vdb_leaf_grid数量
+    uint8_t leaf_grid_log2_dim_ = 3;                // vdb_leaf_grid数量
   };
 
   struct DistPoint
