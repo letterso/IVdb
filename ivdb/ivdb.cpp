@@ -98,6 +98,8 @@ template <typename PointType>
 bool IVdb<PointType>::GetClosestPoint(const PointType &point,
                                       PointVector &closest_points, size_t max_num)
 {
+    closest_points.clear();
+    
     std::vector<DistPoint> candidates;
     candidates.reserve(nearby_grids_.size() * options_.max_points_per_voxel_);
 
