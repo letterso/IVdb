@@ -14,9 +14,22 @@ IVdb使用 `bonxai` 库（vdb）作为数据结构底层，实现了动态增加
 
 ## 使用
 
+### 编译安装
+
 ```bash
-mkdir build
-cd build
-cmake ..
-make
+cmake -S . -B build
+cmake --build build -j
 ```
+
+### 静态检查
+
+```bash
+cmake --build build --target run_cppcheck               # 执行静态检查
+cmake --build build --target generate_cppcheck_htm      # 生成 HTML 报告
+cmake --build build --target all_cppcheck_reports       # 一次性生成全部报告
+```
+
+报告输出路径：
+
+- `build/cppcheck_report.xml`
+- `build/cppcheck_report.html`
